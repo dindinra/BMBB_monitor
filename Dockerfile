@@ -31,4 +31,6 @@ COPY --from=frontend-builder /app/frontend/build* ./static/
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
 ENV PORT=8080
-CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:8080"]
+
+# Hapus CMD yang lama, ganti jadi ini (TANPA kurung siku):
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
