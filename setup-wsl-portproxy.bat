@@ -1,0 +1,3 @@
+@echo off
+echo Configuring WSL2 port forwarding (requires Administrator)...
+powershell.exe -Command "Start-Process PowerShell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"%~dp0setup-wsl-portproxy.ps1\"'"

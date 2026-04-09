@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=BMBB Monitor
+Comment=Start BMBB Monitoring Application
+Icon=terminal
+Exec=/home/dindin/BMBB_monitor/start-all.sh
+Terminal=true
+Type=Application
+Categories=Utility;Application;
+StartupNotify=false
+Path=/home/dindin/BMBB_monitor

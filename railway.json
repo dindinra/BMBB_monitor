@@ -1,0 +1,11 @@
+{
+  "build": {
+    "dockerfile": "./Dockerfile"
+  },
+  "deploy": {
+    "restartPolicy": {
+      "type": "on_failure",
+      "maxRetryCount": 3
+    }
+  }
+}
