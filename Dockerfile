@@ -23,10 +23,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy semua file backend
 COPY backend/ ./backend
 
-# LOGIC BARU: Cek folder 'dist' atau 'build' lalu copy ke 'static'
-# Kita pakai trik shell agar tidak error kalau salah satu folder tidak ada
-COPY --from=frontend-builder /app/frontend/dist* ./static/
-COPY --from=frontend-builder /app/frontend/build* ./static/
+# Copy the built frontend assets preserving the expected directory structure
+# This places the build output in ./frontend/build so backend can locate index.html and static assets.
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
+# In case the build uses a 'dist' folder, also copy it to the same location.
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
