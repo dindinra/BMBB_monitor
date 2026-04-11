@@ -27,7 +27,7 @@ COPY backend/ ./backend
 # This places the build output in ./frontend/build so backend can locate index.html and static assets.
 COPY --from=frontend-builder /app/frontend/build ./frontend/build
 # In case the build uses a 'dist' folder, also copy it to the same location.
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+# (optional) No separate 'dist' folder; build output is in ./frontend/build
 
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
