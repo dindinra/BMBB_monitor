@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from .app.routers import purchases, import_export, sales, inventory, reports
+from app.routers import purchases, import_export, sales, inventory, reports
 from .app.models import Purchase, Sales, Item, Inventory  # Ensure all models are imported so tables are created
 
 # Create tables
