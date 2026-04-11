@@ -32,8 +32,10 @@ COPY --from=frontend-builder /app/frontend/build* ./static/
 EXPOSE 8080
 ENV PORT=8080
 
-# Hapus CMD yang lama, ganti jadi ini (TANPA kurung siku):
-# Run migration before starting the app
+# Copy scripts for migration
+COPY scripts/ ./scripts
+
+# Run migration before starting the app (ignore failures)
 RUN python scripts/migrate_sqlite_to_pg.py || echo "Migration skipped or failed"
 
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT
