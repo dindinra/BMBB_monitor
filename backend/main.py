@@ -41,6 +41,11 @@ app.include_router(sales.router)
 app.include_router(inventory.router)
 app.include_router(reports.router)
 
+# Debug endpoint to show static_dir path
+@app.get("/debug/static-dir")
+def debug_static_dir():
+    return {"static_dir": static_dir}
+
 # Catch‑all route for SPA – serve index.html for any non‑API path
 @app.get("/{full_path:path}", include_in_schema=False)
 async def spa_catch_all(full_path: str):
