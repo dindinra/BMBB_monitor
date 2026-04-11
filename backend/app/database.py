@@ -10,7 +10,12 @@ if not DATABASE_URL:
     # Local development fallback to SQLite
     # database.py location: BMBB_monitor/backend/app/database.py
     # Purchase.db is located one level above the project root
-    DB_PATH = Path(__file__).resolve().parents[4] / "purchase.db"
+    # Determine DB path relative to this file. In Docker, the project root is two levels up.
+    DB_PATH = (
+        Path(os.getenv("PURCHASE_DB_PATH", ""))
+        if os.getenv("PURCHASE_DB_PATH")
+        else Path(__file__).resolve().parents[2] / "purchase.db"
+    )
     DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Handle Railway's PostgreSQL URL format (they sometimes use postgres:// instead of postgresql://)
