@@ -49,8 +49,10 @@ def debug_static_dir():
 
 # Catch‑all route for SPA – serve index.html for any non‑API path
 @app.get("/")
-def read_root():
-    return {"message": "BMBB Monitoring API", "status": "running"}
+async def read_root():
+    # Serve the React dashboard as the homepage
+    index_path = os.path.join(build_dir, "index.html")
+    return FileResponse(index_path)
 
 
 @app.get("/{full_path:path}", include_in_schema=False)
