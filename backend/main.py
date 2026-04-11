@@ -23,11 +23,6 @@ if not os.path.isdir(static_dir):
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Catch‑all route for SPA – serve index.html for any non‑API path
-@app.get("/{full_path:path}", include_in_schema=False)
-async def spa_catch_all(full_path: str):
-    index_path = os.path.join(static_dir, "index.html")
-    return FileResponse(index_path)
 
 
 # CORS
@@ -45,6 +40,12 @@ app.include_router(import_export.router)
 app.include_router(sales.router)
 app.include_router(inventory.router)
 app.include_router(reports.router)
+
+# Catch‑all route for SPA – serve index.html for any non‑API path
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_catch_all(full_path: str):
+    index_path = os.path.join(static_dir, "index.html")
+    return FileResponse(index_path)
 
 
 @app.get("/")
