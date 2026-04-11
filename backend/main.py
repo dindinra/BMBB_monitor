@@ -11,11 +11,11 @@ app = FastAPI(title="BMBB Monitoring API", version="1.0.0")
 
 # Serve React frontend static files (built assets)
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 import os
 
 # Serve the built React assets. In development we use the local build folder; in Docker the same path is copied to /app/static.
-build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "build"))
+build_dir = os.getenv("BUILD_DIR", "/app/frontend/build")
 static_dir = os.path.join(build_dir, "static")
 if not os.path.isdir(static_dir):
     # Fallback to a generic static folder if build missing (prevents crash)
@@ -50,13 +50,18 @@ def debug_static_dir():
 # Catch‑all route for SPA – serve index.html for any non‑API path
 @app.get("/")
 async def read_root():
-    # Serve the React dashboard as the homepage
+    # Serve the React dashboard as the homepage; fallback if missing
     index_path = os.path.join(build_dir, "index.html")
-    return FileResponse(index_path)
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    # Simple fallback page
+    return HTMLResponse("<h1>BMBB Monitor</h1><p>Frontend not built.</p>")
 
 
 @app.get("/{full_path:path}", include_in_schema=False)
 async def spa_catch_all(full_path: str):
-    # Serve the React app's index.html located in the build directory (outside static assets)
+    # Serve the React app's index.html (fallback if missing)
     index_path = os.path.join(build_dir, "index.html")
-    return FileResponse(index_path)
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    return HTMLResponse("<h1>BMBB Monitor</h1><p>Frontend not built.</p>")

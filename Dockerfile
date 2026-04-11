@@ -25,13 +25,13 @@ COPY backend/ ./backend
 
 # Copy the built frontend assets preserving the expected directory structure
 # This places the build output in ./frontend/build so backend can locate index.html and static assets.
-# COPY --from=frontend-builder /app/frontend/dist ./frontend/dist  # removed – build output is in ./frontend/build
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
 # In case the build uses a 'dist' folder, also copy it to the same location.
 # (optional) No separate 'dist' folder; build output is in ./frontend/build
 
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
-ENV PORT=8080
+ENV PORT=${PORT:-8080}  # fallback to 8080 if platform doesn't set it
 
 # Copy scripts for migration
 COPY scripts/ ./scripts
