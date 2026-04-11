@@ -11,7 +11,24 @@ app = FastAPI(title="BMBB Monitoring API", version="1.0.0")
 
 # Serve React frontend static files (built assets)
 from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+from fastapi.responses import FileResponse
+import os
+
+# Serve the built React assets. In development we use the local build folder; in Docker the same path is copied to /app/static.
+static_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "build")
+if not os.path.isdir(static_dir):
+    # Fallback to a 'static' folder if build missing (prevents crash)
+    static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+    os.makedirs(static_dir, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Catch‑all route for SPA – serve index.html for any non‑API path
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_catch_all(full_path: str):
+    index_path = os.path.join(static_dir, "index.html")
+    return FileResponse(index_path)
+
 
 # CORS
 app.add_middleware(
