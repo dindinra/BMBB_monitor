@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 import os
 
 # Serve the built React assets. In development we use the local build folder; in Docker the same path is copied to /app/static.
-static_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "build")
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "build"))
 if not os.path.isdir(static_dir):
     # Fallback to a 'static' folder if build missing (prevents crash)
     static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
