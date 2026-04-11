@@ -9,6 +9,10 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="BMBB Monitoring API", version="1.0.0")
 
+# Serve React frontend static files (built assets)
+from fastapi.staticfiles import StaticFiles
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
