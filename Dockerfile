@@ -21,7 +21,7 @@ COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy semua file backend
-COPY backend/ .
+COPY backend/ ./backend
 
 # LOGIC BARU: Cek folder 'dist' atau 'build' lalu copy ke 'static'
 # Kita pakai trik shell agar tidak error kalau salah satu folder tidak ada
