@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
+const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return window.location.origin; })();
 
 const formatCurrency = (value) => {
   if (typeof value !== 'number') return '-';

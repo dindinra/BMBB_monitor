@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
+const API_BASE = window.location.origin;
 
 const formatCurrency = (v) => (v != null ? 'Rp ' + v.toLocaleString('id-ID') : '-');
 

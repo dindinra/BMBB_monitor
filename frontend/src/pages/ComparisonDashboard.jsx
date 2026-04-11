@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
+const API_BASE = window.location.origin;
 
 // Utility: format currency (small currency)
 const formatCurrency = (value) => {

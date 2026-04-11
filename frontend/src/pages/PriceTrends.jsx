@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useSearchParams, Link } from 'react-router-dom';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
+const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return window.location.origin; })();
 
 const formatCurrency = (v) => {
   if (v == null) return '-';

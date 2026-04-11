@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.database import engine, Base
-from backend.app.routers import purchases, import_export, sales, inventory, reports
+from .app.database import engine, Base
+from .app.routers import purchases, import_export, sales, inventory, reports
 from .app.models import Purchase, Sales, Item, Inventory  # Ensure all models are imported so tables are created
 
 # Create tables
@@ -15,9 +15,10 @@ from fastapi.responses import FileResponse
 import os
 
 # Serve the built React assets. In development we use the local build folder; in Docker the same path is copied to /app/static.
-static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "build", "static"))
+build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "build"))
+static_dir = os.path.join(build_dir, "static")
 if not os.path.isdir(static_dir):
-    # Fallback to a 'static' folder if build missing (prevents crash)
+    # Fallback to a generic static folder if build missing (prevents crash)
     static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
     os.makedirs(static_dir, exist_ok=True)
 
@@ -47,12 +48,13 @@ def debug_static_dir():
     return {"static_dir": static_dir}
 
 # Catch‑all route for SPA – serve index.html for any non‑API path
-@app.get("/{full_path:path}", include_in_schema=False)
-async def spa_catch_all(full_path: str):
-    index_path = os.path.join(static_dir, "index.html")
-    return FileResponse(index_path)
-
-
 @app.get("/")
 def read_root():
     return {"message": "BMBB Monitoring API", "status": "running"}
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def spa_catch_all(full_path: str):
+    # Serve the React app's index.html located in the build directory (outside static assets)
+    index_path = os.path.join(build_dir, "index.html")
+    return FileResponse(index_path)

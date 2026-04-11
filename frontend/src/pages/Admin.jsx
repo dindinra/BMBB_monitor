@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
+const API_BASE = window.location.origin;
 
 // Reusable Import Panel component
 function ImportPanel({ title, icon, file, setFile, importLoading, handleImport, handleClear, importStatus, clearStatus, removeDuplicates, setRemoveDuplicates }) {

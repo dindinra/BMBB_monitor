@@ -1,10 +1,7 @@
 import axios from 'axios';
 
 // Dynamically construct API base based on current hostname
-const API_BASE = (() => {
-  const host = window.location.hostname || 'localhost';
-  return `http://${host}:8000`;
-})();
+const API_BASE = window.location.origin;
 
 export const getInventory = (params = {}) =>
   axios.get(`${API_BASE}/inventory`, { params });

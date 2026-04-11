@@ -115,5 +115,5 @@ export const TOOLS_SCHEMA = [
 
 export const BMBB_API_URL = (() => {
   const host = window.location.hostname || 'localhost';
-  return `http://${host}:8000`;
+  return window.location.origin;
 })();
