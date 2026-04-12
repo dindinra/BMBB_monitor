@@ -10,7 +10,7 @@ if not DATABASE_URL:
     # Local development fallback to SQLite
     # database.py location: BMBB_monitor/backend/app/database.py
     # Purchase.db is at /home/dindin/purchase.db (sibling of BMBB_monitor)
-    DB_PATH = Path(__file__).resolve().parents[3] / "purchase.db"
+    DB_PATH = Path.home() / "purchase.db"
     DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 # Handle Railway's PostgreSQL URL format (they sometimes use postgres:// instead of postgresql://)
