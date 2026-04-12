@@ -42,6 +42,12 @@ app.include_router(sales.router)
 app.include_router(inventory.router)
 app.include_router(reports.router)
 
+# Redirect /inventory (no trailing slash) to /inventory/ for proper routing
+from fastapi.responses import RedirectResponse
+@app.get("/inventory")
+def redirect_inventory():
+    return RedirectResponse(url="/inventory/")
+
 # Debug endpoint to show static_dir path
 @app.get("/debug/static-dir")
 def debug_static_dir():
