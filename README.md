@@ -97,11 +97,20 @@ Jadi jika akses via `http://192.168.1.10:3000` maka API ke `http://192.168.1.10:
 - Pastikan ada data inventory & last_cost.
 - Cek endpoint `/inventory/generate_po` langsung (curl).
 
-### Export Excel blank
+- Export Excel blank
+- Fixed missing trailing slash for `/inventory` endpoint by adding a redirect in `backend/main.py`.
 - Bug sudah difix: panggil `get_inventory` dengan `search=None`.
 - Cek `/inventory/export` dan `/inventory/generate_po/export`.
 
 ---
+
+## 📁 Project Structure
+
+### 🚢 Deployment (Railway)
+- The `railway-deploy` branch contains the latest fixes, including the `/inventory` trailing‑slash redirect.
+- Railway builds the Docker image using `Dockerfile` at the repository root.
+- Ensure the `railway.json` file is present (defines build & restart policy).
+- After pushing to `railway-deploy`, Railway will automatically redeploy.
 
 ## 📁 Project Structure
 
