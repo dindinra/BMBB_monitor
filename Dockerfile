@@ -31,7 +31,7 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
-ENV PORT=${PORT:-8080}  # fallback to 8080 if platform doesn't set it
+ENV PORT=${PORT:-8080}
 
 # Copy scripts for migration
 COPY scripts/ ./scripts
