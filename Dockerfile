@@ -30,7 +30,7 @@ COPY --from=frontend-builder /app/frontend/build* ./static/
 
 # Command untuk menjalankan aplikasi
 EXPOSE 8080
-ENV PORT=8080
+ENV PORT=${PORT:-8080}  # fallback to 8080 if platform doesn't set it
 
 # Hapus CMD yang lama, ganti jadi ini (TANPA kurung siku):
 CMD uvicorn main:app --host 0.0.0.0 --port $PORT
