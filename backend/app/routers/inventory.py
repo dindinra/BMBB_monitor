@@ -14,16 +14,6 @@ from ..models import Item, Inventory
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
-# Helper: get distinct values for filters
-def get_distinct_outlets(db: Session):
-    return [r[0] for r in db.query(Inventory.outlet).distinct().all()]
-
-def get_distinct_gudangs(db: Session):
-    return [r[0] for r in db.query(Inventory.gudang).distinct().all()]
-
-def get_distinct_kategoris(db: Session):
-    return [r[0] for r in db.query(Item.kategori).distinct().all()]
-
 @router.get("/")
 def get_inventory(
     outlet: Optional[str] = Query(None),
@@ -124,13 +114,18 @@ def get_inventory(
     # Sorting: low stock first, then by item_code
     result.sort(key=lambda x: (0 if x['status'] == 'low' else 1, x['item_code']))
 
+    # Get distinct options from FILTERED results (not all database)
+    filtered_outlets = sorted(set(item['outlet'] for item in result))
+    filtered_gudangs = sorted(set(item['gudang'] for item in result))
+    filtered_kategoris = sorted(set(item['kategori'] for item in result))
+
     return {
         'count': len(result),
         'items': result,
         'filters': {
-            'outlets': get_distinct_outlets(db),
-            'gudangs': get_distinct_gudangs(db),
-            'kategoris': get_distinct_kategoris(db)
+            'outlets': filtered_outlets,
+            'gudangs': filtered_gudangs,
+            'kategoris': filtered_kategoris
         }
     }
 

@@ -80,7 +80,7 @@ function Inventory() {
       const items = res.data.items || [];
       setData(items);
 
-      // Update filter options from response
+      // Update filter options from response (already filtered by backend)
       if (res.data.filters) {
         setFilterOptions({
           outlets: res.data.filters.outlets || [],
@@ -100,11 +100,11 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []); // Empty dependency - fetchData won't recreate
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(filters); // Pass filters as argument instead of using from closure
+  }, [filters]); // Only filters trigger fetch
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
