@@ -133,10 +133,6 @@ const fetchData = useCallback(async (overrideFilters = null) => {
     fetchData(cleared);
   };
 
-  // Auto-fetch when filters change
-  useEffect(() => {
-    fetchData();
-  }, [filters]);
 
   // Buffer editing
   const handleBufferChange = (e, itemId) => {
@@ -243,57 +239,56 @@ const fetchData = useCallback(async (overrideFilters = null) => {
 
       {/* Filter Card */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-          {/* Search */}
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Filters</h2>
+        <form onSubmit={handleApplyFilters} className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">🔎 Search (Item Code/Name)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
             <input
               type="text"
               name="search"
               value={filters.search}
               onChange={handleFilterChange}
               placeholder="cth: HP037 atau Tabung Gas"
-              className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white"
+              className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Outlet</label>
-            <select name="outlet" value={filters.outlet} onChange={handleFilterChange} className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Outlet</label>
+            <select name="outlet" value={filters.outlet} onChange={handleFilterChange} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Semua</option>
               {filterOptions.outlets.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gudang</label>
-            <select name="gudang" value={filters.gudang} onChange={handleFilterChange} className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gudang</label>
+            <select name="gudang" value={filters.gudang} onChange={handleFilterChange} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Semua</option>
               {filterOptions.gudangs.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori</label>
-            <select name="kategori" value={filters.kategori} onChange={handleFilterChange} className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kategori</label>
+            <select name="kategori" value={filters.kategori} onChange={handleFilterChange} className="mt-1 block w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="">Semua</option>
               {filterOptions.kategoris.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
-          <div className="flex gap-2">
-            <button onClick={handleApplyFilters} disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50">
-              {loading ? 'Loading...' : '🔍 Apply'}
+          <div className="flex items-end gap-2">
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50">
+              {loading ? 'Loading...' : 'Apply'}
             </button>
-            <button onClick={handleClearFilters} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-200">
-              🗑️ Reset
+            <button type="button" onClick={handleClearFilters} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-200">
+              Reset
             </button>
           </div>
-        </div>
+        </form>
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="checkbox" name="low_stock_only" checked={filters.low_stock_only} onChange={handleFilterChange} />
             Hanya low stock
           </label>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-700 dark:text-gray-300">Buffer Threshold (override):</label>
+            <label className="text-sm text-gray-700 dark:text-gray-300">Buffer Threshold (override):</label>
             <input
               type="number"
               name="threshold"
