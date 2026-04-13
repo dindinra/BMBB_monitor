@@ -14,6 +14,25 @@ from ..models import Item, Inventory
 
 router = APIRouter(prefix="/inventory", tags=["inventory"])
 
+# Handle both '/inventory' and '/inventory/' without requiring a redirect
+@router.get("")
+def get_inventory_no_slash(
+    outlet: Optional[str] = Query(None),
+    gudang: Optional[str] = Query(None),
+    kategori: Optional[str] = Query(None),
+    low_stock_only: bool = Query(False),
+    threshold: Optional[int] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Alias for get_inventory to support the path without trailing slash.
+    Delegates to the main get_inventory implementation.
+    """
+    return get_inventory(outlet=outlet, gudang=gudang, kategori=kategori,
+                         low_stock_only=low_stock_only, threshold=threshold,
+                         search=search, db=db)
+
+
 @router.get("/")
 def get_inventory(
     outlet: Optional[str] = Query(None),
