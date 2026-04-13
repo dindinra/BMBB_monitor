@@ -114,18 +114,19 @@ def get_inventory(
     # Sorting: low stock first, then by item_code
     result.sort(key=lambda x: (0 if x['status'] == 'low' else 1, x['item_code']))
 
-    # Get distinct options from FILTERED results (not all database)
-    filtered_outlets = sorted(set(item['outlet'] for item in result))
-    filtered_gudangs = sorted(set(item['gudang'] for item in result))
-    filtered_kategoris = sorted(set(item['kategori'] for item in result))
+    # Get ALL distinct options from database (not filtered by current filters)
+    # This allows dropdowns to show all available options
+    all_outlets = sorted(set([r[0] for r in db.query(Inventory.outlet).distinct().all()]))
+    all_gudangs = sorted(set([r[0] for r in db.query(Inventory.gudang).distinct().all()]))
+    all_kategoris = sorted(set([r[0] for r in db.query(Item.kategori).distinct().all()]))
 
     return {
         'count': len(result),
         'items': result,
         'filters': {
-            'outlets': filtered_outlets,
-            'gudangs': filtered_gudangs,
-            'kategoris': filtered_kategoris
+            'outlets': all_outlets,
+            'gudangs': all_gudangs,
+            'kategoris': all_kategoris
         }
     }
 

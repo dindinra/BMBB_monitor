@@ -80,7 +80,7 @@ function Inventory() {
       const items = res.data.items || [];
       setData(items);
 
-      // Update filter options from response (already filtered by backend)
+      // Update filter options from response (backend returns ALL available options)
       if (res.data.filters) {
         setFilterOptions({
           outlets: res.data.filters.outlets || [],
@@ -100,11 +100,12 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency - fetchData won't recreate
+  }, [filters]);
 
+  // Init: load data on mount
   useEffect(() => {
-    fetchData(filters); // Pass filters as argument instead of using from closure
-  }, [filters]); // Only filters trigger fetch
+    fetchData();
+  }, [fetchData]);
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
