@@ -62,7 +62,7 @@ function Inventory() {
     }
   };
 
-  // Fetch distinct filter options from the first inventory call (they are included)
+  // Fetch inventory data - NOT auto-triggered on filter change
   const fetchData = useCallback(async (overrideFilters = null) => {
     const currentFilters = overrideFilters || filters;
     setLoading(true);
@@ -100,12 +100,12 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []); // Empty dependency - only update by explicit call
 
   // Init: load data on mount
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -115,15 +115,22 @@ function Inventory() {
     }));
   };
 
+  const handleApplyFilters = (e) => {
+    e?.preventDefault();
+    fetchData(filters);
+  };
+
   const handleClearFilters = () => {
-    setFilters({
+    const cleared = {
       outlet: '',
       gudang: '',
       kategori: '',
       low_stock_only: false,
       threshold: '',
       search: ''
-    });
+    };
+    setFilters(cleared);
+    fetchData(cleared);
   };
 
   // Buffer editing
@@ -267,8 +274,8 @@ function Inventory() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => fetchData()} disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50">
-              {loading ? 'Loading...' : '🔍 Filter'}
+            <button onClick={handleApplyFilters} disabled={loading} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-50">
+              {loading ? 'Loading...' : '🔍 Apply'}
             </button>
             <button onClick={handleClearFilters} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-200">
               🗑️ Reset
