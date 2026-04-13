@@ -14,6 +14,7 @@ Start:
 cd ~/BMBB_monitor
 source venv/bin/activate
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
+# NOTE: API now serves both `/inventory` and `/inventory/` endpoints (no redirect needed).
 ```
 
 ### Frontend (React Dev Server)
