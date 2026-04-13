@@ -66,7 +66,7 @@ def html_report(
         }
 
         # Monthly breakdown
-        from app.database import format_date_column
+        from ..database import format_date_column
         if q.whereclause is not None:
             monthly_q = db.query(
                 format_date_column(Model.tanggal, '%Y-%m').label('month'),

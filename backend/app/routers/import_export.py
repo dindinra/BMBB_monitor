@@ -218,7 +218,7 @@ def export_excel(
     db: Session = Depends(get_db)
 ):
     """Export purchase data to Excel (.xlsx)."""
-    from app.database import format_date_column
+    from ..database import format_date_column
     query = db.query(models.Purchase)
 
     if outlet:

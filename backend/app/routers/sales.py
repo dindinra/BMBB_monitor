@@ -152,7 +152,7 @@ def aggregate_monthly(
 ):
     """Return monthly sales totals grouped by outlet."""
     from sqlalchemy import func
-    from app.database import format_date_column
+    from ..database import format_date_column
 
     query = db.query(
         format_date_column(models.Sales.tanggal, '%Y').label('year'),
