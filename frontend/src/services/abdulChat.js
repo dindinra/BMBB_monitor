@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { SYSTEM_PROMPT, TOOLS_SCHEMA, BMBB_API_URL } from '../utils/abdulPersona';
 
-// Default fallback API key (provided by user). In production you should store this in env vars.
-const DEFAULT_OPENROUTER_API_KEY = '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';
+// NOTE: OpenRouter API key must be provided via REACT_APP_OPENROUTER_API_KEY environment variable.
+// We keep an empty fallback to avoid accidental key leakage.
+const DEFAULT_OPENROUTER_API_KEY='';
 
 // Cache TTL (ms) – configurable via REACT_APP_CACHE_TTL, default 5 minutes
 const CACHE_TTL = parseInt(process.env.REACT_APP_CACHE_TTL) || 300000;

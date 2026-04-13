@@ -12,6 +12,7 @@ const QUICK_ACTIONS = [
   "Rekomendasi pembelian"
 ];
 
+// API key is read from environment in abdulChat; this constant kept for UI warning.
 const API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || '';
 const CURRENT_MODEL = 'openrouter/free';
 const STORAGE_KEY = 'bmbb_ai_chat_history';
