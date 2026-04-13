@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { SYSTEM_PROMPT, TOOLS_SCHEMA, BMBB_API_URL } from '../utils/abdulPersona';
 
+// Default fallback API key (provided by user). In production you should store this in env vars.
+const DEFAULT_OPENROUTER_API_KEY = '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';
+
 // Cache TTL (ms) – configurable via REACT_APP_CACHE_TTL, default 5 minutes
 const CACHE_TTL = parseInt(process.env.REACT_APP_CACHE_TTL) || 300000;
 // Max number of messages to keep in context (excluding system)
@@ -146,11 +149,11 @@ function toAPIMessage(msg) {
 export async function sendMessage(history, userMessage) {
   const trimmedHistory = history.slice(-MAX_HISTORY);
   const messages = formatMessages(trimmedHistory, userMessage);
-  const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY;
+  const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
   if (!apiKey) {
     return "⚠️ OpenRouter API key belum diset. Tambah REACT_APP_OPENROUTER_API_KEY di .env frontend, ya!";
   }
-  const model = process.env.REACT_APP_OPENROUTER_MODEL || 'arcee-ai/trinity-large-preview:free';
+  const model = process.env.REACT_APP_OPENROUTER_MODEL || 'openrouter/free';
 
   let round = 0;
   let finalResponse = '';
@@ -203,11 +206,11 @@ export function sendMessageCancelable(history, userMessage) {
   const promise = (async () => {
     const trimmedHistory = history.slice(-MAX_HISTORY);
     const messages = formatMessages(trimmedHistory, userMessage);
-    const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY;
+    const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
     if (!apiKey) {
       return "⚠️ OpenRouter API key belum diset. Tambah REACT_APP_OPENROUTER_API_KEY di .env frontend, ya!";
     }
-    const model = process.env.REACT_APP_OPENROUTER_MODEL || 'arcee-ai/trinity-large-preview:free';
+    const model = process.env.REACT_APP_OPENROUTER_MODEL || 'openrouter/free';
 
     let round = 0;
     let finalResponse = '';

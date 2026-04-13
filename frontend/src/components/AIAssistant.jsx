@@ -12,8 +12,8 @@ const QUICK_ACTIONS = [
   "Rekomendasi pembelian"
 ];
 
-const API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
-const CURRENT_MODEL = 'arcee-ai/trinity-large-preview:free';
+const API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || '';
+const CURRENT_MODEL = 'openrouter/free';
 const STORAGE_KEY = 'bmbb_ai_chat_history';
 
 export default function AIAssistant() {
