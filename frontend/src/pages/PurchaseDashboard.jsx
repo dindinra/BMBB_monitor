@@ -242,8 +242,8 @@ function PurchaseDashboard() {
           📈 Purchase Monitoring
         </h1>
         <div className="flex gap-2">
-          <button onClick={exportMonthlyCSV} disabled={exporting || loading} className={secondaryBtn}>
-            📊 Monthly CSV
+          <button onClick={exportMonthlyExcel} disabled={exporting || loading} className={secondaryBtn}>
+            📊 Monthly Excel
           </button>
           <button onClick={exportTopItemsExcel} disabled={exporting || loading} className={secondaryBtn}>
             📦 Items CSV
