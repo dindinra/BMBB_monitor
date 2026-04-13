@@ -133,6 +133,11 @@ function Inventory() {
     fetchData(cleared);
   };
 
+  // Auto-fetch when filters change
+  useEffect(() => {
+    fetchData();
+  }, [filters]);
+
   // Buffer editing
   const handleBufferChange = (e, itemId) => {
     const value = e.target.value;
