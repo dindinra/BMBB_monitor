@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import * as XLSX from 'xlsx';
 
 const API_BASE = window.location.origin;
 
@@ -131,62 +132,52 @@ function PurchaseDashboard() {
     fetchData(cleared);
   };
 
-  const exportMonthlyCSV = useCallback(() => {
+  const exportMonthlyExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Month', key: 'month' },
-      { label: 'Bandung', key: 'bandung' },
-      { label: 'Serpong', key: 'serpong' }
-    ];
-    const csv = convertToCSV(chartData, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Prepare data for Excel: each row = month with bandung and serpong values
+    const wsData = chartData.map(row => ({
+      Month: row.month,
+      Bandung: row.bandung,
+      Serpong: row.serpong,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `purchase_monthly_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `purchase_monthly_${new Date().toISOString().slice(0,10)}.xlsx`;
     link.click();
     setExporting(false);
   }, [monthlyData]); // chartData depends on monthlyData, so safe
 
-  const exportTopItemsCSV = useCallback(() => {
+  const exportTopItemsExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Rank', key: 'rank' },
-      { label: 'Item', key: 'item' },
-      { label: 'Unit', key: 'unit' },
-      { label: 'Total Qty', key: 'total_qty' },
-      { label: 'Total Amount', key: 'total_amount' }
-    ];
-    const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
-    const csv = convertToCSV(data, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const data = topItems.map((item, idx) => ({
+      Rank: idx + 1,
+      Item: item.item,
+      Unit: item.unit || '-',
+      'Total Qty': item.total_qty,
+      'Total Amount': item.total_amount,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Top Items');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `purchase_top_items_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `purchase_top_items_${new Date().toISOString().slice(0,10)}.xlsx`;
     link.click();
     setExporting(false);
   }, [topItems]);
 
-  const exportTopVendorsCSV = useCallback(() => {
-    setExporting(true);
-    const headers = [
-      { label: 'Rank', key: 'rank' },
-      { label: 'Vendor', key: 'vendor' },
-      { label: 'Unit', key: 'unit' },
-      { label: 'Total Qty', key: 'total_qty' },
-      { label: 'Total Amount', key: 'total_amount' }
-    ];
-    const data = topVendors.map((v, idx) => ({ ...v, rank: idx + 1 }));
-    const csv = convertToCSV(data, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_top_vendors_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
-  }, [topVendors]);
+
+
+
 
   // Styling
   const cardBg = 'bg-white dark:bg-gray-800';
@@ -197,6 +188,28 @@ function PurchaseDashboard() {
   const buttonBase = 'px-4 py-2 rounded-md font-semibold transition-colors disabled:opacity-50';
   const primaryBtn = `${buttonBase} bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600`;
   const secondaryBtn = `${buttonBase} bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200`;
+
+  const exportTopVendorsExcel = useCallback(() => {
+    setExporting(true);
+    const data = topVendors.map((vendor, idx) => ({
+      Rank: idx + 1,
+      Vendor: vendor.vendor,
+      Unit: vendor.unit || '-',
+      'Total Qty': vendor.total_qty,
+      'Total Amount': vendor.total_amount,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Top Vendors');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `purchase_top_vendors_${new Date().toISOString().slice(0,10)}.xlsx`;
+    link.click();
+    setExporting(false);
+  }, [topVendors]);
 
   const chartData = useMemo(() => {
     if (!monthlyData.length) return [];
@@ -232,10 +245,10 @@ function PurchaseDashboard() {
           <button onClick={exportMonthlyCSV} disabled={exporting || loading} className={secondaryBtn}>
             📊 Monthly CSV
           </button>
-          <button onClick={exportTopItemsCSV} disabled={exporting || loading} className={secondaryBtn}>
+          <button onClick={exportTopItemsExcel} disabled={exporting || loading} className={secondaryBtn}>
             📦 Items CSV
           </button>
-          <button onClick={exportTopVendorsCSV} disabled={exporting || loading} className={secondaryBtn}>
+          <button onClick={exportTopVendorsExcel} disabled={exporting || loading} className={secondaryBtn}>
             🏢 Vendors CSV
           </button>
         </div>
@@ -369,7 +382,7 @@ function PurchaseDashboard() {
                 <option value="20">20</option>
               </select>
             </div>
-            <button onClick={exportTopItemsCSV} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
+            <button onClick={exportTopItemsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
               Export CSV
             </button>
           </div>
@@ -421,7 +434,7 @@ function PurchaseDashboard() {
                 <option value="20">20</option>
               </select>
             </div>
-            <button onClick={exportTopVendorsCSV} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
+            <button onClick={exportTopVendorsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
               Export CSV
             </button>
           </div>
