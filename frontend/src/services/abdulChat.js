@@ -3,7 +3,7 @@ import { SYSTEM_PROMPT, TOOLS_SCHEMA, BMBB_API_URL } from '../utils/abdulPersona
 
 // NOTE: OpenRouter API key must be provided via REACT_APP_OPENROUTER_API_KEY environment variable.
 // We keep an empty fallback to avoid accidental key leakage.
-const DEFAULT_OPENROUTER_API_KEY='';
+const DEFAULT_OPENROUTER_API_KEY = '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'
 
 // Cache TTL (ms) – configurable via REACT_APP_CACHE_TTL, default 5 minutes
 const CACHE_TTL = parseInt(process.env.REACT_APP_CACHE_TTL) || 300000;
