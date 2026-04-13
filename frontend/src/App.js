@@ -11,7 +11,6 @@ import PurchaseDetails from './pages/PurchaseDetails';
 import SalesDashboard from './pages/SalesDashboard';
 import Inventory from './pages/Inventory';
 import Sidebar from './components/Sidebar';
-import AIAssistant from './components/AIAssistant';
 import './index.css';
 
 function App() {
@@ -37,8 +36,6 @@ function App() {
           </div>
         </div>
       </Router>
-      {/* Floating AI Assistant */}
-      <AIAssistant />
     </ThemeProvider>
   );
 }
