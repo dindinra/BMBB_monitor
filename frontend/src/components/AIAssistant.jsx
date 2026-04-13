@@ -12,9 +12,8 @@ const QUICK_ACTIONS = [
   "Rekomendasi pembelian"
 ];
 
-// API key is read from environment in abdulChat; this constant kept for UI warning.
-const API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY || '';
-const CURRENT_MODEL = 'openrouter/free';
+const API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+const CURRENT_MODEL = process.env.REACT_APP_OPENROUTER_MODEL || 'openrouter/free';
 const STORAGE_KEY = 'bmbb_ai_chat_history';
 
 export default function AIAssistant() {
@@ -255,8 +254,16 @@ export default function AIAssistant() {
               </button>
             </div>
             {!API_KEY && (
-              <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                ⚠️ OpenRouter API key tidak dikonfigurasi. AI Assistant tidak akan berfungsi.
+              <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900 p-2 rounded">
+                ⚠️ <strong>AI Assistant Disabled:</strong> OpenRouter API key not configured.
+                <br />
+                1. Create <code className="bg-red-200 dark:bg-red-800 px-1 rounded">frontend/.env</code>
+                <br />
+                2. Copy contents from <code className="bg-red-200 dark:bg-red-800 px-1 rounded">.env.example</code>
+                <br />
+                3. Add your key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="underline font-semibold">openrouter.ai/keys</a>
+                <br />
+                4. Restart frontend
               </div>
             )}
           </div>

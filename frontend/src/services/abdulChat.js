@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { SYSTEM_PROMPT, TOOLS_SCHEMA, BMBB_API_URL } from '../utils/abdulPersona';
 
-// NOTE: OpenRouter API key must be provided via REACT_APP_OPENROUTER_API_KEY environment variable.
-// We keep an empty fallback to avoid accidental key leakage.
-const DEFAULT_OPENROUTER_API_KEY = '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'
+// OpenRouter API key MUST be provided via environment variable
+// See .env.example for setup instructions
 
 // Cache TTL (ms) – configurable via REACT_APP_CACHE_TTL, default 5 minutes
 const CACHE_TTL = parseInt(process.env.REACT_APP_CACHE_TTL) || 300000;
@@ -150,9 +149,9 @@ function toAPIMessage(msg) {
 export async function sendMessage(history, userMessage) {
   const trimmedHistory = history.slice(-MAX_HISTORY);
   const messages = formatMessages(trimmedHistory, userMessage);
-  const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
+  const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY;
   if (!apiKey) {
-    return "⚠️ OpenRouter API key belum diset. Tambah REACT_APP_OPENROUTER_API_KEY di .env frontend, ya!";
+    throw new Error('OpenRouter API key not configured. Set REACT_APP_OPENROUTER_API_KEY in .env file');
   }
   const model = process.env.REACT_APP_OPENROUTER_MODEL || 'openrouter/free';
 
@@ -207,9 +206,9 @@ export function sendMessageCancelable(history, userMessage) {
   const promise = (async () => {
     const trimmedHistory = history.slice(-MAX_HISTORY);
     const messages = formatMessages(trimmedHistory, userMessage);
-    const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
+    const apiKey = process.env.REACT_APP_OPENROUTER_API_KEY;
     if (!apiKey) {
-      return "⚠️ OpenRouter API key belum diset. Tambah REACT_APP_OPENROUTER_API_KEY di .env frontend, ya!";
+      throw new Error('OpenRouter API key not configured. Set REACT_APP_OPENROUTER_API_KEY in .env file');
     }
     const model = process.env.REACT_APP_OPENROUTER_MODEL || 'openrouter/free';
 

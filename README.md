@@ -48,6 +48,28 @@ sqlite:///../purchase.db
 ### CORS
 Backend sudah dikonfigurasi `allow_origins=["*"]` untuk development (LAN access). Untuk produksi, batasi origins.
 
+### AI Assistant (OpenRouter)
+Fitur AI Assistant memerlukan OpenRouter API key:
+
+1. **Buat OpenRouter account**: https://openrouter.ai
+2. **Generate API key**: https://openrouter.ai/keys
+3. **Setup environment variable**:
+   ```bash
+   cd frontend
+   cp .env.example .env
+   # Edit .env, paste API key Anda:
+   # REACT_APP_OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+   ```
+4. **Restart frontend**:
+   ```bash
+   npm start
+   ```
+
+**Catatan**: 
+- API key tidak boleh di-commit ke git (`.env` sudah di `.gitignore`)
+- Free tier OpenRouter biasanya terbatas, upgrade di needed
+- Jika 401 error → API key invalid/expired, generate yang baru
+
 ### API Base (Frontend)
 Frontend otomatis menyesuaikan API base berdasarkan hostname browser:
 ```javascript
