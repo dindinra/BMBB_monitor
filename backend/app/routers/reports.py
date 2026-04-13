@@ -65,16 +65,17 @@ def html_report(
             'count': summary.count or 0
         }
 
-        # Monthly breakdown (SQLite: use strftime)
+        # Monthly breakdown
+        from app.database import format_date_column
         if q.whereclause is not None:
             monthly_q = db.query(
-                func.strftime('%Y-%m', Model.tanggal).label('month'),
+                format_date_column(Model.tanggal, '%Y-%m').label('month'),
                 func.sum(Model.total).label('amount'),
                 func.sum(Model.qty).label('qty')
             ).filter(q.whereclause).group_by('month').order_by('month')
         else:
             monthly_q = db.query(
-                func.strftime('%Y-%m', Model.tanggal).label('month'),
+                format_date_column(Model.tanggal, '%Y-%m').label('month'),
                 func.sum(Model.total).label('amount'),
                 func.sum(Model.qty).label('qty')
             ).group_by('month').order_by('month')

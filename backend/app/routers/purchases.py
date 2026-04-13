@@ -68,11 +68,12 @@ def aggregate_monthly(
 ):
     """Return monthly purchase totals grouped by outlet."""
     from sqlalchemy import func
+    from app.database import format_date_column
 
     query = db.query(
-        func.strftime('%Y', models.Purchase.tanggal).label('year'),
-        func.strftime('%m', models.Purchase.tanggal).label('month_num'),
-        func.strftime('%Y-%m', models.Purchase.tanggal).label('month'),
+        format_date_column(models.Purchase.tanggal, '%Y').label('year'),
+        format_date_column(models.Purchase.tanggal, '%m').label('month_num'),
+        format_date_column(models.Purchase.tanggal, '%Y-%m').label('month'),
         models.Purchase.outlet,
         func.sum(models.Purchase.total).label('total_amount'),
         func.sum(models.Purchase.qty).label('total_qty'),
@@ -182,13 +183,14 @@ def top_vendors(
     from sqlalchemy import func
 
     # Build base query with common filters
+    from app.database import format_date_column
     base_q = db.query(models.Purchase)
     if outlet:
         base_q = base_q.filter(models.Purchase.outlet == outlet)
     if tipe_item:
         base_q = base_q.filter(models.Purchase.tipe_item == tipe_item)
     if year:
-        base_q = base_q.filter(func.strftime('%Y', models.Purchase.tanggal) == str(year))
+        base_q = base_q.filter(format_date_column(models.Purchase.tanggal, '%Y') == str(year))
     if start_date:
         base_q = base_q.filter(models.Purchase.tanggal >= start_date)
     if end_date:
@@ -342,7 +344,8 @@ def price_by_item(
     if tipe_item:
         subq = subq.filter(models.Purchase.tipe_item == tipe_item)
     if year:
-        subq = subq.filter(func.strftime('%Y', models.Purchase.tanggal) == str(year))
+        from app.database import format_date_column
+        subq = subq.filter(format_date_column(models.Purchase.tanggal, '%Y') == str(year))
     if start_date:
         subq = subq.filter(models.Purchase.tanggal >= start_date)
     if end_date:
@@ -456,6 +459,7 @@ def last_cost(
 ):
     """Return latest purchase per item (by tanggal) with vendor, unit, harga."""
     from sqlalchemy import func
+    from app.database import format_date_column
 
     # Base query with filters
     base_q = db.query(models.Purchase)
@@ -464,7 +468,7 @@ def last_cost(
     if tipe_item:
         base_q = base_q.filter(models.Purchase.tipe_item == tipe_item)
     if year:
-        base_q = base_q.filter(func.strftime('%Y', models.Purchase.tanggal) == str(year))
+        base_q = base_q.filter(format_date_column(models.Purchase.tanggal, '%Y') == str(year))
     if start_date:
         base_q = base_q.filter(models.Purchase.tanggal >= start_date)
     if end_date:
@@ -541,12 +545,13 @@ def price_history(
         return ''.join(ch if ord(ch) >= 32 or ch in '\n\r\t' else '?' for ch in str(s))
 
     # Determine period expression based on group_by
+    from app.database import format_date_column
     if group_by == "day":
-        period_expr = func.strftime('%Y-%m-%d', models.Purchase.tanggal)
+        period_expr = format_date_column(models.Purchase.tanggal, '%Y-%m-%d')
     elif group_by == "month":
-        period_expr = func.strftime('%Y-%m', models.Purchase.tanggal)
+        period_expr = format_date_column(models.Purchase.tanggal, '%Y-%m')
     else:  # year
-        period_expr = func.strftime('%Y', models.Purchase.tanggal)
+        period_expr = format_date_column(models.Purchase.tanggal, '%Y')
 
     # Build base query
     query = db.query(

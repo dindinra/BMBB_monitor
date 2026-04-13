@@ -218,6 +218,7 @@ def export_excel(
     db: Session = Depends(get_db)
 ):
     """Export purchase data to Excel (.xlsx)."""
+    from app.database import format_date_column
     query = db.query(models.Purchase)
 
     if outlet:
@@ -237,7 +238,7 @@ def export_excel(
     if tipe_item:
         query = query.filter(models.Purchase.tipe_item == tipe_item)
     if year:
-        query = query.filter(func.strftime('%Y', models.Purchase.tanggal) == str(year))
+        query = query.filter(format_date_column(models.Purchase.tanggal, '%Y') == str(year))
     if search:
         query = query.filter(
             or_(

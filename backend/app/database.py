@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -45,3 +45,29 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Helper: database-agnostic date formatting
+def format_date_column(column, format_str):
+    """
+    Format a date column for both SQLite and PostgreSQL.
+    
+    Args:
+        column: SQLAlchemy column to format
+        format_str: SQLite strftime format string (e.g., '%Y', '%Y-%m')
+    
+    Returns:
+        Formatted column expression compatible with both databases
+    """
+    # Check engine dialect
+    if engine.dialect.name == 'sqlite':
+        return func.strftime(format_str, column)
+    elif engine.dialect.name == 'postgresql':
+        # Map SQLite format to PostgreSQL format
+        pg_format = format_str
+        pg_format = pg_format.replace('%Y', 'YYYY')
+        pg_format = pg_format.replace('%m', 'MM')
+        pg_format = pg_format.replace('%d', 'DD')
+        return func.to_char(column, pg_format)
+    else:
+        # Fallback to strftime for other databases
+        return func.strftime(format_str, column)
