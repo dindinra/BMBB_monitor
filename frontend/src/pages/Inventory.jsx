@@ -63,7 +63,7 @@ function Inventory() {
   };
 
   // Fetch inventory data - NOT auto-triggered on filter change
-  const fetchData = useCallback(async (overrideFilters = null) => {
+const fetchData = useCallback(async (overrideFilters = null) => {
     const currentFilters = overrideFilters || filters;
     setLoading(true);
     setError(null);
@@ -80,7 +80,7 @@ function Inventory() {
       const items = res.data.items || [];
       setData(items);
 
-      // Update filter options from response (backend returns ALL available options)
+      // Update filter options from response
       if (res.data.filters) {
         setFilterOptions({
           outlets: res.data.filters.outlets || [],
@@ -100,7 +100,7 @@ function Inventory() {
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency - only update by explicit call
+  }, [filters]);
 
   // Init: load data on mount
   useEffect(() => {
@@ -117,7 +117,7 @@ function Inventory() {
 
   const handleApplyFilters = (e) => {
     e?.preventDefault();
-    fetchData(filters);
+    fetchData();
   };
 
   const handleClearFilters = () => {
