@@ -33,29 +33,30 @@ class ChatResponse(BaseModel):
     id: int
 
 # ============ Constants ============
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-MANK_JAJANK_SYSTEM_PROMPT = """Halo! Aku Mank Jajank, asisten bijak dan lucu untuk BMBB (BBQ Mountain Boys Burger) - restoran terbaik di Bandung! 🍔🔥
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+MANK_JAJANK_SYSTEM_PROMPT = """Yo! Aku Mank Jajank, AI yang paling kocak di BMBB (BBQ Mountain Boys Burger) Bandung! 🍔🔥 Gila-gilaan lucu tapi tetap berisi!
 
-Karakter Mank Jajank:
-- 😄 Lucu dan menghibur - memberikan joke atau komentar kocak saat menjawab
-- 🧠 Bijak dan profesional - memberikan insight berdasarkan data bisnis
-- 🏔️ Ramah dan santai - berbicara seperti teman, bukan robot formal
-- 🍔 Ahli BMBB - memahami inventory, pola penjualan, strategi pricing
-- 📊 Analis data - bisa interpret grafik, trend, dan memberikan rekomendasi
+Gaya Mank Jajank:
+- 😂 SUPER KOCAK - Jokes parah, punchline gila, sarcasm berlebihan tapi bikin ketawa
+- 💪 KUAT DATA - Bisa analisa sales, inventory, harga tanpa basa-basi
+- 🎭 PERSONALITY - Bercanda sambil ngerjain, gombal tapi pintar banget
+- 🔥 NO FILTER - Candaan tajam, honest, sedikit kasar tapi tetap sopan
+- 📊 BISNIS SMART - Tahu BMBB dalam dan luar
 
-Gaya bicara: Santai, membantu, sedikit gombal tapi pintar. Tidak kaku!
+Vibe: Kayak temen kantor yang kocak tapi bisa diandalin. Bukan chatbot membosankan!
 
-Contoh responses:
-- "Penjualan UHT di Bandung naik 40% minggu ini, bagus banget! Ternyata yang dibeli orang rata-rata item apa sih?"
-- "Waduh, stock daging terlihat kurang dari pola pembelian minggu ini. Kayaknya perlu restok segera deh!"
-- "Lihat dari data, penjualan Jumat-Sabtu lagi sangat bagus, burgernya pasti sedap banget! Terus dipertahankan ya!"
+Contoh gaya Mank Jajank:
+- "Waduh SALES UHT BANDUNG NAIK 40%?! Berarti orang udah gila-gilaan haus ya?? Hahaha! Tapi serius, yang paling laku item apa? Tunjuk ke aku!"
+- "STOK DAGING KURANG?? Woi, ini burger atau salad resto?? 😱 Lihat pembelian minggu ini jenak-jenak sih, perlu restok ASAP bro!"
+- "JUMAT-SABTU LAGI JUARA?? Hmm... kayaknya burgernya terlalu sedap sih 😎 Jangan berhenti pls, lanjutkan manjanya!"
+- "Wah vendor ini terlalu boros? Coba ganti dah, ada yang lebih murah. Hidup cuma satu, jangan sampai bangkrut gegara vendor nakal!"
 
-Hal yang harus dihindari:
-- Jangan keluar dari konteks BMBB (inventory, penjualan, pembelian, laporan)
-- Kalau ditanya tentang hal di luar topik, arahkan kembali ke bisnis BMBB
-- Tetap profesional di balik humor
+Yang dilarang:
+- Keluar dari topik BMBB (inventory, sales, pricing, business)
+- Tapi boleh bercanda apapun asalkan tetap professional
+- Kalau out of scope, arahkan balik ke bisnis sambil becanda
 
-Mari kita bicara bisnis sambil bersenang-senang! 🥳"""
+Mari kita talk bisnis BMBB sambil ketawa sepuasnya! 🎉🔥"""
 
 # ============ Helper Functions ============
 
@@ -218,27 +219,28 @@ def _get_general_summary(db: Session) -> str:
     except Exception as e:
         return f"🏪 Ringkasan: Error - {str(e)}"
 
-async def call_groq_api(messages: list) -> str:
-    """Call Groq API with backend API key (fast & free!)"""
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Groq API key not configured")
+async def call_openrouter_api(messages: list) -> str:
+    """Call OpenRouter API with backend API key (safe!)"""
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(status_code=500, detail="OpenRouter API key not configured")
     
     headers = {
-        "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer": "https://bmbb-monitor.railway.app",
+        "X-Title": "BMBB Monitor",
     }
     
     data = {
-        "model": "llama-3-70b-8192",  # Available free model on Groq
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",  # Free & powerful model
         "messages": messages,
-        "temperature": 0.9,  # More personality
+        "temperature": 1.0,  # More creativity for jokes
         "max_tokens": 500,
     }
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 headers=headers,
                 json=data
             )
@@ -246,7 +248,7 @@ async def call_groq_api(messages: list) -> str:
             result = response.json()
             return result["choices"][0]["message"]["content"]
     except httpx.TimeoutException:
-        return "Tunggu sebentar, koneksi sedang lambat. Coba tanya lagi dalam beberapa saat ya 🙏"
+        return "Woi! Koneksina lemot parah! Coba lagi dalam sebentar ya boss 🙏"
     except httpx.HTTPError as e:
         # Log full error response for debugging
         error_detail = str(e)
@@ -255,7 +257,7 @@ async def call_groq_api(messages: list) -> str:
                 error_detail = e.response.text
         except:
             pass
-        raise HTTPException(status_code=500, detail=f"Groq API error: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"OpenRouter API error: {error_detail}")
 
 # ============ Endpoints ============
 @router.post("/chat", response_model=ChatResponse)
@@ -295,8 +297,8 @@ async def chat_with_mank_jajank(
         {"role": "user", "content": request.message}
     ]
     
-    # Get response from Groq
-    ai_response = await call_groq_api(messages)
+    # Get response from OpenRouter
+    ai_response = await call_openrouter_api(messages)
     
     # Log chat to database
     chat_record = ChatHistory(
@@ -318,12 +320,12 @@ async def chat_with_mank_jajank(
 async def health_check():
     """Check if Mank Jajank is awake 😴"""
     return {
-        "status": "Mank Jajank siap membantu!",
-        "model": "llama-3-70b-8192 (Groq)",
-        "personality": "Kocak & Bijak",
+        "status": "Mank Jajank siap bikin ketawa! 😂",
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "personality": "SUPER KOCAK & BERISI",
         "database": "PostgreSQL/SQLite",
         "context": "Real-time dari BMBB database",
-        "speed": "⚡ Super cepat (Groq)",
+        "accuracy": "💯% based on data",
         "timestamp": datetime.utcnow()
     }
 
