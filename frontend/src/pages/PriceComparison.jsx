@@ -200,12 +200,7 @@ function PriceComparison() {
               name="item"
               placeholder="Search item..."
               value={filters.item}
-              onChange={e => {
-                const newFilters = { ...filters, item: e.target.value };
-                setFilters(newFilters);
-                // Auto-fetch on search input change
-                setTimeout(() => fetchData(newFilters), 300);
-              }}
+              onChange={e => setFilters(prev => ({...prev, item: e.target.value}))}
               className={inputClass}
             />
           </div>
