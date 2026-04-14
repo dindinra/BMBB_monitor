@@ -221,7 +221,7 @@ function LastCost() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title={row.vendor}>{row.vendor}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{formatDate(row.tanggal)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left text-gray-900 dark:text-gray-100">{row.unit}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-900 dark:text-gray-100">{formatCurrency(row.harga)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">{formatCurrency(row.harga)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-left text-gray-900 dark:text-gray-100">{row.outlet}</td>
                   </tr>
                 ))}
