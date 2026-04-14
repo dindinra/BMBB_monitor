@@ -33,37 +33,29 @@ class ChatResponse(BaseModel):
     id: int
 
 # ============ Constants ============
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = "openrouter/free"
-MANK_JAJANK_SYSTEM_PROMPT = """Mulai ngaing ku Mank Jajank, asisten bijak & kocak pikeun BMBB (BBQ Mountain Boys Burger) - restoran lieur anu terbaik di Bandung! 🍔🔥
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+MANK_JAJANK_SYSTEM_PROMPT = """Halo! Aku Mank Jajank, asisten bijak dan lucu untuk BMBB (BBQ Mountain Boys Burger) - restoran terbaik di Bandung! 🍔🔥
 
 Karakter Mank Jajank:
-- 😄 Kocak & bawa tawa - jokes & punchlines dikombinasi sareng data
-- 🧠 Bijak & profesional - helpful insights sareng real advice
-- 🏔️ Ciri khas Sunda - nganggo logat Sunda (campur Indonesian), misalna:
-  - "Awas napi?" (Apa kabar?)
-  - "Mun..." (Kalau...)
-  - "Euy" (sebagai ender/penguat)
-  - "Lérén..." (Hentikan...)
-  - "Naon sih?" (Apa sih?)
-  - "Ari..." (Atau...)
-  - Nganggo "ku", "urang", "tuh", "teh"
-- 🍔 BMBB Expert - tahu inventory, sales patterns, pricing strategies
-- 📊 Data Analyst - bisa interpret charts, trends, recommendations
+- 😄 Lucu dan menghibur - memberikan joke atau komentar kocak saat menjawab
+- 🧠 Bijak dan profesional - memberikan insight berdasarkan data bisnis
+- 🏔️ Ramah dan santai - berbicara seperti teman, bukan robot formal
+- 🍔 Ahli BMBB - memahami inventory, pola penjualan, strategi pricing
+- 📊 Analis data - bisa interpret grafik, trend, dan memberikan rekomendasi
 
-Tone: Santai, helpful, agak gombal tapi pinter. Bukan robotic!
+Gaya bicara: Santai, membantu, sedikit gombal tapi pintar. Tidak kaku!
 
 Contoh responses:
-- "Euy ieu mah penjualan UHT di Bandung naik 40% minggu ini, tul? Teu boring! Mang burgers naon tuh yang kebanyakan dilakuin?" 
-- "Hah serpong naon sih? Stock daging kurang oge tuh kayaknya mun diliat dari purchasing patterns minggu ini. Perlu restok dah!"
-- "Mun ku lihat, penjualan jumat-sabtu lagi asik banget, mang burgers-nya sedep teh! Keep it up!"
+- "Penjualan UHT di Bandung naik 40% minggu ini, bagus banget! Ternyata yang dibeli orang rata-rata item apa sih?"
+- "Waduh, stock daging terlihat kurang dari pola pembelian minggu ini. Kayaknya perlu restok segera deh!"
+- "Lihat dari data, penjualan Jumat-Sabtu lagi sangat bagus, burgernya pasti sedap banget! Terus dipertahankan ya!"
 
-Batasan:
-- Jangan keluar dari konteks BMBB (inventory, sales, purchasing, reports)
-- Kalau pertanyaan out of scope, arahkan balik ke bisnis BMBB
-- Tetap professional di belakang humor
+Hal yang harus dihindari:
+- Jangan keluar dari konteks BMBB (inventory, penjualan, pembelian, laporan)
+- Kalau ditanya tentang hal di luar topik, arahkan kembali ke bisnis BMBB
+- Tetap profesional di balik humor
 
-Mari kita talk business sambil ketawa-ketawa! 🥳"""
+Mari kita bicara bisnis sambil bersenang-senang! 🥳"""
 
 # ============ Helper Functions ============
 
@@ -226,19 +218,18 @@ def _get_general_summary(db: Session) -> str:
     except Exception as e:
         return f"🏪 Ringkasan: Error - {str(e)}"
 
-async def call_openrouter_api(messages: list) -> str:
-    """Call OpenRouter API with backend API key (safe!)"""
-    if not OPENROUTER_API_KEY:
-        raise HTTPException(status_code=500, detail="OpenRouter API key not configured")
+async def call_groq_api(messages: list) -> str:
+    """Call Groq API with backend API key (fast & free!)"""
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="Groq API key not configured")
     
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://bmbb-monitor.railway.app",
-        "X-Title": "BMBB Monitor",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
     }
     
     data = {
-        "model": "openrouter/free",  # Free tier routing
+        "model": "mixtral-8x7b-32768",  # Free & fast model
         "messages": messages,
         "temperature": 0.9,  # More personality
         "max_tokens": 500,
@@ -247,7 +238,7 @@ async def call_openrouter_api(messages: list) -> str:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                "https://api.groq.com/openai/v1/chat/completions",
                 headers=headers,
                 json=data
             )
@@ -255,9 +246,9 @@ async def call_openrouter_api(messages: list) -> str:
             result = response.json()
             return result["choices"][0]["message"]["content"]
     except httpx.TimeoutException:
-        return "Lérén bentar, koneksina lagi lemot euy! Coba tanya ulang sedikit bentar 🙏"
+        return "Tunggu sebentar, koneksi sedang lambat. Coba tanya lagi dalam beberapa saat ya 🙏"
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"OpenRouter API error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Groq API error: {str(e)}")
 
 # ============ Endpoints ============
 @router.post("/chat", response_model=ChatResponse)
@@ -297,8 +288,8 @@ async def chat_with_mank_jajank(
         {"role": "user", "content": request.message}
     ]
     
-    # Get response from OpenRouter
-    ai_response = await call_openrouter_api(messages)
+    # Get response from Groq
+    ai_response = await call_groq_api(messages)
     
     # Log chat to database
     chat_record = ChatHistory(
@@ -321,10 +312,11 @@ async def health_check():
     """Check if Mank Jajank is awake 😴"""
     return {
         "status": "Mank Jajank siap membantu!",
-        "model": "openrouter/free",
+        "model": "mixtral-8x7b-32768 (Groq)",
         "personality": "Kocak & Bijak",
         "database": "PostgreSQL/SQLite",
         "context": "Real-time dari BMBB database",
+        "speed": "⚡ Super cepat (Groq)",
         "timestamp": datetime.utcnow()
     }
 
