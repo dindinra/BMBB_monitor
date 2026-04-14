@@ -270,7 +270,7 @@ async def call_openrouter_api(messages: list) -> str:
     }
     
     data = {
-        "model": "nvidia/nemotron-3-super-120b-a12b:free",  # Free & powerful model
+        "model": "openrouter/openai/gpt-oss-120b:free",  # Free & powerful model
         "messages": messages,
         "temperature": 1.0,  # More creativity for jokes
         "max_tokens": 500,
@@ -360,7 +360,7 @@ async def health_check():
     """Check if Mank Jajank is awake 😴"""
     return {
         "status": "Mank Jajank siap bikin ketawa! 😂",
-        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "model": "openrouter/openai/gpt-oss-120b:free",
         "personality": "SUPER KOCAK & BERISI",
         "database": "PostgreSQL/SQLite",
         "context": "Real-time dari BMBB database",
