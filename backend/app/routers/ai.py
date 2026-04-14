@@ -78,7 +78,7 @@ async def call_openrouter_api(messages: list) -> str:
     }
     
     data = {
-        "model": "meta-llama/llama-2-7b-chat",  # Free model on OpenRouter
+        "model": "openrouter/free",  # Free tier routing
         "messages": messages,
         "temperature": 0.9,  # More personality
         "max_tokens": 500,
