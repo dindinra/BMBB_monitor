@@ -392,3 +392,34 @@ async def get_chat_history(
             for r in records
         ]
     }
+
+@router.get("/debug/context")
+async def debug_context_extraction(
+    question: str = Query(..., description="Question to test"),
+    db: Session = Depends(get_db)
+):
+    """DEBUG: Test what database context gets extracted for a question"""
+    try:
+        context = extract_data_context(question, db)
+        
+        # Also get counts from database
+        sales_count = db.query(models.Sales).count()
+        purchase_count = db.query(models.Purchase).count()
+        item_count = db.query(models.Item).count()
+        inventory_count = db.query(models.Inventory).count()
+        
+        return {
+            "question": question,
+            "extracted_context": context,
+            "database_stats": {
+                "total_sales_records": sales_count,
+                "total_purchase_records": purchase_count,
+                "total_items": item_count,
+                "total_inventory_records": inventory_count
+            }
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "question": question
+        }
