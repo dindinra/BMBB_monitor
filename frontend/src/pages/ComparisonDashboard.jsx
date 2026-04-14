@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
+import { exportToExcel } from '../utils/excelExport';
 
 const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
 
@@ -19,17 +20,6 @@ const formatCurrency = (value) => {
 const formatNumber = (value) => {
   if (typeof value !== 'number') return '-';
   return value.toLocaleString('id-ID');
-};
-
-// Utility: convert data to CSV
-const convertToCSV = (data, headers) => {
-  const escaped = data.map(row =>
-    headers.map(h => {
-      const v = row[h.key];
-      return typeof v === 'string' && v.includes(',') ? `"${v}"` : v;
-    }).join(',')
-  );
-  return [headers.map(h => h.label).join(','), ...escaped].join('\n');
 };
 
 function ComparisonDashboard() {
@@ -200,25 +190,16 @@ function ComparisonDashboard() {
   }, [salesSummary, purchaseSummary]);
 
   // Export functions
-  const exportMonthlyCSV = useCallback(() => {
+  const exportMonthlyExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Month', key: 'month' },
-      { label: 'Sales Amount', key: 'sales_amount' },
-      { label: 'Sales Qty', key: 'sales_qty' },
-      { label: 'Purchase Amount', key: 'purchase_amount' },
-      { label: 'Purchase Qty', key: 'purchase_qty' },
-      { label: 'Margin Amount', key: 'margin_amount' },
-      { label: 'Margin %', key: 'margin_percent' }
-    ];
-    const csv = convertToCSV(combinedMonthlyData, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `sales_vs_purchase_monthly_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      exportToExcel(combinedMonthlyData, `sales_vs_purchase_monthly_${new Date().toISOString().slice(0,10)}`, 'Sales vs Purchase');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [combinedMonthlyData]);
 
   // ---- Render helpers ----
@@ -250,8 +231,8 @@ function ComparisonDashboard() {
           📊 Sales vs Purchasing
         </h1>
         <div className="flex gap-2">
-          <button onClick={exportMonthlyCSV} disabled={exporting || loading} className={secondaryBtn}>
-            {exporting ? 'Exporting...' : '📥 Export CSV'}
+          <button onClick={exportMonthlyExcel} disabled={exporting || loading} className={secondaryBtn}>
+            {exporting ? 'Exporting...' : '📥 Export Excel'}
           </button>
         </div>
       </div>

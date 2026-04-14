@@ -1,23 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { exportToExcel } from '../utils/excelExport';
 
 const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
 
 const formatCurrency = (v) => (v != null ? 'Rp ' + v.toLocaleString('id-ID') : '-');
-
-const convertToCSV = (items) => {
-  const headers = ['Item', 'Unit', 'Bandung (Rp)', 'Serpong (Rp)', 'Selisih (Rp)', 'Persen (%)'];
-  const rows = items.map(item => [
-        `"${item.item}"`,
-        item.unit || '',
-        item.bandung != null ? item.bandung : '',
-        item.serpong != null ? item.serpong : '',
-        item.selisih != null ? item.selisih : '',
-        item.persen != null ? item.persen + '%' : ''
-      ]);
-  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-};
 
 function PriceComparison() {
   const [items, setItems] = useState([]);
@@ -123,16 +111,16 @@ function PriceComparison() {
   const primaryBtn = `${buttonBase} bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600`;
   const secondaryBtn = `${buttonBase} bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200`;
 
-  const exportCSV = useCallback(() => {
+  const exportExcel = useCallback(() => {
     setExporting(true);
-    const csv = convertToCSV(items);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `price_comparison_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      exportToExcel(items, `price_comparison_${new Date().toISOString().slice(0,10)}`, 'Price Comparison');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [items]);
 
   if (error) {
@@ -154,8 +142,8 @@ function PriceComparison() {
           🔍 Price Comparison by Item
         </h1>
         <div className="flex gap-2">
-          <button onClick={exportCSV} disabled={exporting || items.length === 0} className={secondaryBtn}>
-            📥 Export CSV ({items.length} rows)
+          <button onClick={exportExcel} disabled={exporting || items.length === 0} className={secondaryBtn}>
+            📥 Export Excel ({items.length} rows)
           </button>
         </div>
       </div>

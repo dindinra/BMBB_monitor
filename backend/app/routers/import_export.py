@@ -198,7 +198,7 @@ def export_csv(
 
     df = pd.DataFrame(data)
     output = BytesIO()
-    df.to_csv(output, index=False, encoding='utf-8')
+    df.to_excel(output, index=False, sheet_name='Purchases')
     output.seek(0)
 
     return StreamingResponse(

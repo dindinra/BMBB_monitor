@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import { exportToExcel } from '../utils/excelExport';
 
 const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
 
@@ -19,16 +20,6 @@ const formatCurrency = (value) => {
 const formatNumber = (value) => {
   if (typeof value !== 'number') return '-';
   return value.toLocaleString('id-ID');
-};
-
-const convertToCSV = (data, headers) => {
-  const escaped = data.map(row =>
-    headers.map(h => {
-      const v = row[h.key];
-      return typeof v === 'string' && v.includes(',') ? `"${v}"` : v;
-    }).join(',')
-  );
-  return [headers.map(h => h.label).join(','), ...escaped].join('\n');
 };
 
 function SalesDashboard() {
@@ -127,53 +118,29 @@ function SalesDashboard() {
     fetchData(cleared);
   };
 
-  const exportMonthlyCSV = useCallback(() => {
+  const exportMonthlyExcel = useCallback(() => {
     setExporting(true);
-    // Compute chartData inline (simple transformation)
-    let chartData = [];
-    if (monthlyData.length) {
-      const monthMap = {};
-      monthlyData.forEach(item => {
-        const month = item.month;
-        if (!monthMap[month]) monthMap[month] = { month };
-        monthMap[month][item.outlet] = Number(item.total_amount);
-      });
-      const sortedMonths = Object.keys(monthMap).sort();
-      chartData = sortedMonths.map(m => monthMap[m]);
+    try {
+      exportToExcel(chartData, `sales_monthly_${new Date().toISOString().slice(0,10)}`, 'Monthly Sales');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
     }
-    const headers = [
-      { label: 'Month', key: 'month' },
-      { label: 'Bandung', key: 'bandung' },
-      { label: 'Serpong', key: 'serpong' }
-    ];
-    const csv = convertToCSV(chartData, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `sales_monthly_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
   }, [monthlyData]);
 
-  const exportTopItemsCSV = useCallback(() => {
+  const exportTopItemsExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Rank', key: 'rank' },
-      { label: 'Item', key: 'item' },
-      { label: 'Unit', key: 'unit' },
-      { label: 'Total Qty', key: 'total_qty' },
-      { label: 'Total Amount', key: 'total_amount' }
-    ];
-    const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
-    const csv = convertToCSV(data, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `sales_top_items_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
+      exportToExcel(data, `sales_top_items_${new Date().toISOString().slice(0,10)}`, 'Top Items');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [topItems]);
 
   // Styling
@@ -216,11 +183,11 @@ function SalesDashboard() {
           💰 Sales Monitoring
         </h1>
         <div className="flex gap-2">
-          <button onClick={exportMonthlyCSV} disabled={exporting || loading} className={secondaryBtn}>
-            📊 Monthly CSV
+          <button onClick={exportMonthlyExcel} disabled={exporting || loading} className={secondaryBtn}>
+            📊 Monthly Excel
           </button>
-          <button onClick={exportTopItemsCSV} disabled={exporting || loading} className={secondaryBtn}>
-            🏆 Top Items CSV
+          <button onClick={exportTopItemsExcel} disabled={exporting || loading} className={secondaryBtn}>
+            🏆 Top Items Excel
           </button>
         </div>
       </div>
@@ -353,8 +320,8 @@ function SalesDashboard() {
                 <option value="20">20</option>
               </select>
             </div>
-            <button onClick={exportTopItemsCSV} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
-              Export CSV
+            <button onClick={exportTopItemsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
+              Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">

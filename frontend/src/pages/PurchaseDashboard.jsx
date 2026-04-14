@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import { exportToExcel } from '../utils/excelExport';
 
 const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
 
@@ -20,16 +21,6 @@ const formatCurrency = (value) => {
 const formatNumber = (value) => {
   if (typeof value !== 'number') return '-';
   return value.toLocaleString('id-ID');
-};
-
-const convertToCSV = (data, headers) => {
-  const escaped = data.map(row =>
-    headers.map(h => {
-      const v = row[h.key];
-      return typeof v === 'string' && v.includes(',') ? `"${v}"` : v;
-    }).join(',')
-  );
-  return [headers.map(h => h.label).join(','), ...escaped].join('\n');
 };
 
 function PurchaseDashboard() {
@@ -131,61 +122,42 @@ function PurchaseDashboard() {
     fetchData(cleared);
   };
 
-  const exportMonthlyCSV = useCallback(() => {
+  const exportMonthlyExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Month', key: 'month' },
-      { label: 'Bandung', key: 'bandung' },
-      { label: 'Serpong', key: 'serpong' }
-    ];
-    const csv = convertToCSV(chartData, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_monthly_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
-  }, [monthlyData]); // chartData depends on monthlyData, so safe
+    try {
+      exportToExcel(chartData, `purchase_monthly_${new Date().toISOString().slice(0,10)}`, 'Monthly Purchase');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
+  }, [monthlyData]);
 
-  const exportTopItemsCSV = useCallback(() => {
+  const exportTopItemsExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Rank', key: 'rank' },
-      { label: 'Item', key: 'item' },
-      { label: 'Unit', key: 'unit' },
-      { label: 'Total Qty', key: 'total_qty' },
-      { label: 'Total Amount', key: 'total_amount' }
-    ];
-    const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
-    const csv = convertToCSV(data, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_top_items_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
+      exportToExcel(data, `purchase_top_items_${new Date().toISOString().slice(0,10)}`, 'Top Items');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [topItems]);
 
-  const exportTopVendorsCSV = useCallback(() => {
+  const exportTopVendorsExcel = useCallback(() => {
     setExporting(true);
-    const headers = [
-      { label: 'Rank', key: 'rank' },
-      { label: 'Vendor', key: 'vendor' },
-      { label: 'Unit', key: 'unit' },
-      { label: 'Total Qty', key: 'total_qty' },
-      { label: 'Total Amount', key: 'total_amount' }
-    ];
-    const data = topVendors.map((v, idx) => ({ ...v, rank: idx + 1 }));
-    const csv = convertToCSV(data, headers);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_top_vendors_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      const data = topVendors.map((v, idx) => ({ ...v, rank: idx + 1 }));
+      exportToExcel(data, `purchase_top_vendors_${new Date().toISOString().slice(0,10)}`, 'Top Vendors');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [topVendors]);
 
   // Styling
@@ -229,14 +201,14 @@ function PurchaseDashboard() {
           📈 Purchase Monitoring
         </h1>
         <div className="flex gap-2">
-          <button onClick={exportMonthlyCSV} disabled={exporting || loading} className={secondaryBtn}>
-            📊 Monthly CSV
+          <button onClick={exportMonthlyExcel} disabled={exporting || loading} className={secondaryBtn}>
+            📊 Monthly Excel
           </button>
-          <button onClick={exportTopItemsCSV} disabled={exporting || loading} className={secondaryBtn}>
-            📦 Items CSV
+          <button onClick={exportTopItemsExcel} disabled={exporting || loading} className={secondaryBtn}>
+            📦 Items Excel
           </button>
-          <button onClick={exportTopVendorsCSV} disabled={exporting || loading} className={secondaryBtn}>
-            🏢 Vendors CSV
+          <button onClick={exportTopVendorsExcel} disabled={exporting || loading} className={secondaryBtn}>
+            🏢 Vendors Excel
           </button>
         </div>
       </div>
@@ -369,8 +341,8 @@ function PurchaseDashboard() {
                 <option value="20">20</option>
               </select>
             </div>
-            <button onClick={exportTopItemsCSV} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
-              Export CSV
+            <button onClick={exportTopItemsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
+              Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -421,8 +393,8 @@ function PurchaseDashboard() {
                 <option value="20">20</option>
               </select>
             </div>
-            <button onClick={exportTopVendorsCSV} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
-              Export CSV
+            <button onClick={exportTopVendorsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
+              Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">
