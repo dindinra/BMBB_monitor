@@ -229,7 +229,7 @@ async def call_groq_api(messages: list) -> str:
     }
     
     data = {
-        "model": "mixtral-8x7b-32768",  # Free & fast model
+        "model": "llama2-70b-4096",  # Reliable free model
         "messages": messages,
         "temperature": 0.9,  # More personality
         "max_tokens": 500,
@@ -248,7 +248,14 @@ async def call_groq_api(messages: list) -> str:
     except httpx.TimeoutException:
         return "Tunggu sebentar, koneksi sedang lambat. Coba tanya lagi dalam beberapa saat ya 🙏"
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"Groq API error: {str(e)}")
+        # Log full error response for debugging
+        error_detail = str(e)
+        try:
+            if hasattr(e.response, 'text'):
+                error_detail = e.response.text
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"Groq API error: {error_detail}")
 
 # ============ Endpoints ============
 @router.post("/chat", response_model=ChatResponse)
