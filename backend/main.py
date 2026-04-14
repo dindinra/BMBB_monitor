@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
 from .app.database import engine, Base
 from .app.routers import purchases, import_export, sales, inventory, reports, ai
 from .app.models import Purchase, Sales, Item, Inventory  # Ensure all models are imported so tables are created
