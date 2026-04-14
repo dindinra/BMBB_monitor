@@ -229,7 +229,7 @@ async def call_groq_api(messages: list) -> str:
     }
     
     data = {
-        "model": "llama2-70b-4096",  # Reliable free model
+        "model": "llama-3-70b-8192",  # Available free model on Groq
         "messages": messages,
         "temperature": 0.9,  # More personality
         "max_tokens": 500,
@@ -319,7 +319,7 @@ async def health_check():
     """Check if Mank Jajank is awake 😴"""
     return {
         "status": "Mank Jajank siap membantu!",
-        "model": "mixtral-8x7b-32768 (Groq)",
+        "model": "llama-3-70b-8192 (Groq)",
         "personality": "Kocak & Bijak",
         "database": "PostgreSQL/SQLite",
         "context": "Real-time dari BMBB database",
