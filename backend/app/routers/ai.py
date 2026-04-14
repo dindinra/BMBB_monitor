@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, DateTime, func, desc
+from datetime import datetime, timedelta
 import httpx
 import os
 from typing import Optional
@@ -66,6 +66,166 @@ Batasan:
 Mari kita talk business sambil ketawa-ketawa! 🥳"""
 
 # ============ Helper Functions ============
+
+def extract_data_context(question: str, db: Session) -> str:
+    """Extract relevant data from database based on question keywords"""
+    question_lower = question.lower()
+    context_parts = []
+    
+    # Keywords mapping
+    keywords_sales = ["penjualan", "sold", "sales", "laris", "terjual", "revenue", "income"]
+    keywords_price = ["harga", "price", "cost", "mahal", "murah", "tarif"]
+    keywords_inventory = ["stock", "stok", "inventory", "persediaan", "gudang", "buffer"]
+    keywords_vendor = ["vendor", "supplier", "penjual", "suplai"]
+    keywords_outlet = ["outlet", "bandung", "serpong", "toko", "cabang"]
+    
+    # Check sales data if relevant
+    if any(kw in question_lower for kw in keywords_sales):
+        context_parts.append(_get_sales_summary(db))
+    
+    # Check pricing data if relevant
+    if any(kw in question_lower for kw in keywords_price):
+        context_parts.append(_get_price_summary(db))
+    
+    # Check inventory if relevant
+    if any(kw in question_lower for kw in keywords_inventory):
+        context_parts.append(_get_inventory_summary(db))
+    
+    # Check vendor if relevant
+    if any(kw in question_lower for kw in keywords_vendor):
+        context_parts.append(_get_vendor_summary(db))
+    
+    # If no specific keywords, give general business summary
+    if not context_parts:
+        context_parts.append(_get_general_summary(db))
+    
+    return "\n\n".join(context_parts)
+
+def _get_sales_summary(db: Session) -> str:
+    """Get sales summary for last 7 days"""
+    try:
+        today = datetime.now().date()
+        week_ago = today - timedelta(days=7)
+        
+        sales_data = db.query(
+            models.Sales.item,
+            models.Sales.outlet,
+            func.sum(models.Sales.qty).label("total_qty"),
+            func.sum(models.Sales.total).label("total_rupiah")
+        ).filter(
+            models.Sales.tanggal >= week_ago,
+            models.Sales.tanggal <= today
+        ).group_by(models.Sales.item, models.Sales.outlet).all()
+        
+        if not sales_data:
+            return "📊 Penjualan: Data belum tersedia"
+        
+        summary = "📊 PENJUALAN (Last 7 Days):\n"
+        for item, outlet, qty, rupiah in sales_data[:10]:  # Top 10
+            summary += f"  • {item} @ {outlet}: {qty} qty = Rp {rupiah:,.0f}\n"
+        
+        return summary
+    except Exception as e:
+        return f"📊 Penjualan: Error - {str(e)}"
+
+def _get_price_summary(db: Session) -> str:
+    """Get latest pricing data"""
+    try:
+        today = datetime.now().date()
+        month_ago = today - timedelta(days=30)
+        
+        prices = db.query(
+            models.Purchase.item,
+            models.Purchase.vendor,
+            func.avg(models.Purchase.harga).label("avg_price"),
+            func.min(models.Purchase.harga).label("min_price"),
+            func.max(models.Purchase.harga).label("max_price")
+        ).filter(
+            models.Purchase.tanggal >= month_ago,
+            models.Purchase.tanggal <= today
+        ).group_by(models.Purchase.item, models.Purchase.vendor).all()
+        
+        if not prices:
+            return "💰 Harga: Data belum tersedia"
+        
+        summary = "💰 HARGA PEMBELIAN (Last 30 Days):\n"
+        for item, vendor, avg, min_p, max_p in prices[:10]:  # Top 10
+            summary += f"  • {item} ({vendor}): Rp {avg:,.0f} (min: {min_p:,}, max: {max_p:,})\n"
+        
+        return summary
+    except Exception as e:
+        return f"💰 Harga: Error - {str(e)}"
+
+def _get_inventory_summary(db: Session) -> str:
+    """Get current inventory levels"""
+    try:
+        inventory = db.query(
+            models.Inventory.outlet,
+            models.Item.name,
+            models.Inventory.ending_qty,
+            models.Inventory.buffer
+        ).join(models.Item).all()
+        
+        if not inventory:
+            return "📦 Inventory: Data belum tersedia"
+        
+        summary = "📦 PERSEDIAAN SAAT INI:\n"
+        for outlet, item_name, qty, buffer in inventory[:15]:  # Top 15
+            status = "✅" if qty > buffer else "⚠️"
+            summary += f"  {status} {item_name} @ {outlet}: {qty} ({buffer} buffer)\n"
+        
+        return summary
+    except Exception as e:
+        return f"📦 Inventory: Error - {str(e)}"
+
+def _get_vendor_summary(db: Session) -> str:
+    """Get vendor analysis"""
+    try:
+        vendors = db.query(
+            models.Purchase.vendor,
+            func.count(models.Purchase.id).label("transaction_count"),
+            func.sum(models.Purchase.total).label("total_spent")
+        ).group_by(models.Purchase.vendor).order_by(desc("total_spent")).all()
+        
+        if not vendors:
+            return "🤝 Vendor: Data belum tersedia"
+        
+        summary = "🤝 VENDOR RANKING:\n"
+        for i, (vendor, count, total) in enumerate(vendors[:10], 1):
+            summary += f"  {i}. {vendor}: {count} transactions = Rp {total:,.0f}\n"
+        
+        return summary
+    except Exception as e:
+        return f"🤝 Vendor: Error - {str(e)}"
+
+def _get_general_summary(db: Session) -> str:
+    """Get general business summary"""
+    try:
+        today = datetime.now().date()
+        
+        # Today's sales
+        today_sales = db.query(func.sum(models.Sales.total)).filter(
+            models.Sales.tanggal == today
+        ).scalar() or 0
+        
+        # This month items count
+        this_month_items = db.query(models.Item).count()
+        
+        # Low stock items
+        low_stock = db.query(models.Inventory).filter(
+            models.Inventory.ending_qty <= models.Inventory.buffer
+        ).count()
+        
+        summary = f"""🏪 RINGKASAN BISNIS BMBB:
+  • Penjualan hari ini: Rp {today_sales:,.0f}
+  • Total item katalog: {this_month_items}
+  • Item dengan stok rendah: {low_stock}
+  • Level detail: Coba tanya tentang penjualan, harga, inventory, atau vendor!"""
+        
+        return summary
+    except Exception as e:
+        return f"🏪 Ringkasan: Error - {str(e)}"
+
 async def call_openrouter_api(messages: list) -> str:
     """Call OpenRouter API with backend API key (safe!)"""
     if not OPENROUTER_API_KEY:
@@ -124,10 +284,12 @@ async def chat_with_mank_jajank(
     if len(request.message) > 1000:
         raise HTTPException(status_code=400, detail="Message too long (max 1000 chars)")
     
+    # Extract data context from database based on user question
+    db_context = extract_data_context(request.message, db)
+    
     # Build context-aware system prompt
     system_message = MANK_JAJANK_SYSTEM_PROMPT
-    if request.context:
-        system_message += f"\n\nKonteks data BMBB saat ini:\n{request.context}"
+    system_message += f"\n\n📊 Data BMBB Terkini:\n{db_context}"
     
     # Prepare messages for OpenRouter
     messages = [
@@ -143,7 +305,7 @@ async def chat_with_mank_jajank(
         user_id=user_id,
         message=request.message,
         response=ai_response,
-        context=request.context
+        context=db_context
     )
     db.add(chat_record)
     db.commit()
@@ -159,8 +321,10 @@ async def health_check():
     """Check if Mank Jajank is awake 😴"""
     return {
         "status": "Mank Jajank siap membantu!",
-        "model": "openrouter/auto",
+        "model": "openrouter/free",
         "personality": "Kocak & Bijak",
+        "database": "PostgreSQL/SQLite",
+        "context": "Real-time dari BMBB database",
         "timestamp": datetime.utcnow()
     }
 
