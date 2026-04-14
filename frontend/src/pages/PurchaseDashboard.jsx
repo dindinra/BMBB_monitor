@@ -4,9 +4,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '../utils/excelExport';
 
-const API_BASE = window.location.origin;
+const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return `http://${host}:8000`; })();
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C43'];
 
@@ -21,16 +21,6 @@ const formatCurrency = (value) => {
 const formatNumber = (value) => {
   if (typeof value !== 'number') return '-';
   return value.toLocaleString('id-ID');
-};
-
-const convertToCSV = (data, headers) => {
-  const escaped = data.map(row =>
-    headers.map(h => {
-      const v = row[h.key];
-      return typeof v === 'string' && v.includes(',') ? `"${v}"` : v;
-    }).join(',')
-  );
-  return [headers.map(h => h.label).join(','), ...escaped].join('\n');
 };
 
 function PurchaseDashboard() {
@@ -134,50 +124,41 @@ function PurchaseDashboard() {
 
   const exportMonthlyExcel = useCallback(() => {
     setExporting(true);
-    // Prepare data for Excel: each row = month with bandung and serpong values
-    const wsData = chartData.map(row => ({
-      Month: row.month,
-      Bandung: row.bandung,
-      Serpong: row.serpong,
-    }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_monthly_${new Date().toISOString().slice(0,10)}.xlsx`;
-    link.click();
-    setExporting(false);
-  }, [monthlyData]); // chartData depends on monthlyData, so safe
+    try {
+      exportToExcel(chartData, `purchase_monthly_${new Date().toISOString().slice(0,10)}`, 'Monthly Purchase');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
+  }, [monthlyData]);
 
   const exportTopItemsExcel = useCallback(() => {
     setExporting(true);
-    const data = topItems.map((item, idx) => ({
-      Rank: idx + 1,
-      Item: item.item,
-      Unit: item.unit || '-',
-      'Total Qty': item.total_qty,
-      'Total Amount': item.total_amount,
-    }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Top Items');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_top_items_${new Date().toISOString().slice(0,10)}.xlsx`;
-    link.click();
-    setExporting(false);
+    try {
+      const data = topItems.map((item, idx) => ({ ...item, rank: idx + 1 }));
+      exportToExcel(data, `purchase_top_items_${new Date().toISOString().slice(0,10)}`, 'Top Items');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [topItems]);
 
-
-
-
+  const exportTopVendorsExcel = useCallback(() => {
+    setExporting(true);
+    try {
+      const data = topVendors.map((v, idx) => ({ ...v, rank: idx + 1 }));
+      exportToExcel(data, `purchase_top_vendors_${new Date().toISOString().slice(0,10)}`, 'Top Vendors');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
+  }, [topVendors]);
 
   // Styling
   const cardBg = 'bg-white dark:bg-gray-800';
@@ -243,13 +224,13 @@ function PurchaseDashboard() {
         </h1>
         <div className="flex gap-2">
           <button onClick={exportMonthlyExcel} disabled={exporting || loading} className={secondaryBtn}>
-            📊 Monthly CSV
+            📊 Monthly Excel
           </button>
           <button onClick={exportTopItemsExcel} disabled={exporting || loading} className={secondaryBtn}>
-            📦 Items CSV
+            📦 Items Excel
           </button>
           <button onClick={exportTopVendorsExcel} disabled={exporting || loading} className={secondaryBtn}>
-            🏢 Vendors CSV
+            🏢 Vendors Excel
           </button>
         </div>
       </div>
@@ -383,7 +364,7 @@ function PurchaseDashboard() {
               </select>
             </div>
             <button onClick={exportTopItemsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
-              Export CSV
+              Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">
@@ -435,7 +416,7 @@ function PurchaseDashboard() {
               </select>
             </div>
             <button onClick={exportTopVendorsExcel} disabled={exporting} className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded">
-              Export CSV
+              Export Excel
             </button>
           </div>
           <div className="overflow-x-auto">
