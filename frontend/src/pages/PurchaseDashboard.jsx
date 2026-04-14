@@ -170,28 +170,6 @@ function PurchaseDashboard() {
   const primaryBtn = `${buttonBase} bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600`;
   const secondaryBtn = `${buttonBase} bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200`;
 
-  const exportTopVendorsExcel = useCallback(() => {
-    setExporting(true);
-    const data = topVendors.map((vendor, idx) => ({
-      Rank: idx + 1,
-      Vendor: vendor.vendor,
-      Unit: vendor.unit || '-',
-      'Total Qty': vendor.total_qty,
-      'Total Amount': vendor.total_amount,
-    }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Top Vendors');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase_top_vendors_${new Date().toISOString().slice(0,10)}.xlsx`;
-    link.click();
-    setExporting(false);
-  }, [topVendors]);
-
   const chartData = useMemo(() => {
     if (!monthlyData.length) return [];
     const monthMap = {};
