@@ -95,11 +95,12 @@ def extract_data_context(question: str, db: Session) -> str:
     return "\n\n".join(context_parts)
 
 def _get_sales_summary(db: Session) -> str:
-    """Get sales summary for last 7 days"""
+    """Get sales summary - tries recent data first, then expands range"""
     try:
         today = datetime.now().date()
         week_ago = today - timedelta(days=7)
         
+        # Try last 7 days first
         sales_data = db.query(
             models.Sales.item,
             models.Sales.outlet,
@@ -110,10 +111,19 @@ def _get_sales_summary(db: Session) -> str:
             models.Sales.tanggal <= today
         ).group_by(models.Sales.item, models.Sales.outlet).all()
         
+        # If no recent data, get all available data
+        if not sales_data:
+            sales_data = db.query(
+                models.Sales.item,
+                models.Sales.outlet,
+                func.sum(models.Sales.qty).label("total_qty"),
+                func.sum(models.Sales.total).label("total_rupiah")
+            ).group_by(models.Sales.item, models.Sales.outlet).order_by(desc("total_rupiah")).all()
+        
         if not sales_data:
             return "📊 Penjualan: Data belum tersedia"
         
-        summary = "📊 PENJUALAN (Last 7 Days):\n"
+        summary = "📊 PENJUALAN (Top Items):\n"
         for item, outlet, qty, rupiah in sales_data[:10]:  # Top 10
             summary += f"  • {item} @ {outlet}: {qty} qty = Rp {rupiah:,.0f}\n"
         
@@ -122,11 +132,12 @@ def _get_sales_summary(db: Session) -> str:
         return f"📊 Penjualan: Error - {str(e)}"
 
 def _get_price_summary(db: Session) -> str:
-    """Get latest pricing data"""
+    """Get latest pricing data - tries recent first, then all data"""
     try:
         today = datetime.now().date()
         month_ago = today - timedelta(days=30)
         
+        # Try last 30 days first
         prices = db.query(
             models.Purchase.item,
             models.Purchase.vendor,
@@ -138,10 +149,20 @@ def _get_price_summary(db: Session) -> str:
             models.Purchase.tanggal <= today
         ).group_by(models.Purchase.item, models.Purchase.vendor).all()
         
+        # If no recent data, get all available data
+        if not prices:
+            prices = db.query(
+                models.Purchase.item,
+                models.Purchase.vendor,
+                func.avg(models.Purchase.harga).label("avg_price"),
+                func.min(models.Purchase.harga).label("min_price"),
+                func.max(models.Purchase.harga).label("max_price")
+            ).group_by(models.Purchase.item, models.Purchase.vendor).all()
+        
         if not prices:
             return "💰 Harga: Data belum tersedia"
         
-        summary = "💰 HARGA PEMBELIAN (Last 30 Days):\n"
+        summary = "💰 HARGA PEMBELIAN (Price Analysis):\n"
         for item, vendor, avg, min_p, max_p in prices[:10]:  # Top 10
             summary += f"  • {item} ({vendor}): Rp {avg:,.0f} (min: {min_p:,}, max: {max_p:,})\n"
         
@@ -196,13 +217,29 @@ def _get_general_summary(db: Session) -> str:
     try:
         today = datetime.now().date()
         
-        # Today's sales
+        # Today's sales (fallback to recent average if no data today)
         today_sales = db.query(func.sum(models.Sales.total)).filter(
             models.Sales.tanggal == today
         ).scalar() or 0
         
-        # This month items count
-        this_month_items = db.query(models.Item).count()
+        if today_sales == 0:
+            # Get average daily sales from last available 30 days
+            month_ago = today - timedelta(days=30)
+            avg_sales = db.query(func.avg(models.Sales.total)).filter(
+                models.Sales.tanggal >= month_ago
+            ).scalar() or 0
+            today_sales_text = f"Avg hari ini (30 hari): Rp {avg_sales:,.0f}"
+        else:
+            today_sales_text = f"Penjualan hari ini: Rp {today_sales:,.0f}"
+        
+        # Item count
+        total_items = db.query(models.Item).count()
+        
+        # Total sales all time
+        total_sales_all = db.query(func.sum(models.Sales.total)).scalar() or 0
+        
+        # Total purchases all time
+        total_purchases = db.query(func.sum(models.Purchase.total)).scalar() or 0
         
         # Low stock items
         low_stock = db.query(models.Inventory).filter(
@@ -210,10 +247,12 @@ def _get_general_summary(db: Session) -> str:
         ).count()
         
         summary = f"""🏪 RINGKASAN BISNIS BMBB:
-  • Penjualan hari ini: Rp {today_sales:,.0f}
-  • Total item katalog: {this_month_items}
+  • {today_sales_text}
+  • Total item katalog: {total_items}
+  • Total penjualan sepanjang masa: Rp {total_sales_all:,.0f}
+  • Total pembelian sepanjang masa: Rp {total_purchases:,.0f}
   • Item dengan stok rendah: {low_stock}
-  • Level detail: Coba tanya tentang penjualan, harga, inventory, atau vendor!"""
+  • Coba tanya tentang penjualan, harga, inventory, atau vendor untuk detail lebih!"""
         
         return summary
     except Exception as e:
