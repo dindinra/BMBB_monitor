@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { exportToExcel } from '../utils/excelExport';
 
-const API_BASE = (() => { const host = window.location.hostname || 'localhost'; return window.location.origin; })();
+const API_BASE = window.location.origin;
 
 const formatCurrency = (value) => {
   if (typeof value !== 'number') return '-';
@@ -86,25 +87,16 @@ function LastCost() {
     fetchData(cleared);
   };
 
-  const exportCSV = useCallback(() => {
+  const exportExcel = useCallback(() => {
     setExporting(true);
-    const headers = ['Item', 'Vendor', 'Tanggal', 'Unit', 'Harga', 'Outlet'];
-    const rows = items.map(r => [
-      `"${r.item}"`,
-      `"${r.vendor}"`,
-      r.tanggal || '',
-      r.unit || '',
-      r.harga != null ? r.harga : '',
-      r.outlet || ''
-    ]);
-    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `last_cost_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    setExporting(false);
+    try {
+      exportToExcel(items, `last_cost_${new Date().toISOString().slice(0,10)}`, 'Last Cost');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Error exporting to Excel');
+    } finally {
+      setExporting(false);
+    }
   }, [items]);
 
   // Styling
@@ -131,8 +123,8 @@ function LastCost() {
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">💰 Last Cost</h1>
-        <button onClick={exportCSV} disabled={exporting || items.length === 0} className={secondaryBtn}>
-          📥 Export CSV ({items.length} rows)
+        <button onClick={exportExcel} disabled={exporting || items.length === 0} className={secondaryBtn}>
+          📥 Export Excel ({items.length} rows)
         </button>
       </div>
 
