@@ -338,7 +338,7 @@ def price_by_item(
     )
 
     if item:
-        subq = subq.filter(models.Purchase.item.like(f"%{item}%"))
+        subq = subq.filter(models.Purchase.item.ilike(f"%{item}%"))
     if outlet:
         subq = subq.filter(models.Purchase.outlet == outlet)
     if tipe_item:
